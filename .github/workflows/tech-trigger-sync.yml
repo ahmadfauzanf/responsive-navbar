@@ -14,21 +14,7 @@ jobs:
       - name: Checkout sawala-tech/tifa-next-api
         uses: actions/checkout@v3
 
-      - name: Check if fork is up-to-date
-        id: check_update
-        run: |
-          git remote set-url projects https://github.com/ahmadfauzanf/responsive-navbar.git || git remote add projects https://github.com/ahmadfauzanf/responsive-navbar.git
-          git fetch projects main
-
-          # Compare latest commit hashes
-          if [[ $(git rev-list --left-right --count HEAD...fauzanf/main | awk '{print $1}') -eq 0 ]]; then
-            echo "UP_TO_DATE=true" >> $GITHUB_ENV
-          else
-            echo "UP_TO_DATE=false" >> $GITHUB_ENV
-          fi
-
       - name: Send Dispatch Event
-        if: env.UP_TO_DATE == 'false'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
