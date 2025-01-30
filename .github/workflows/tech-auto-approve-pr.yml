@@ -10,7 +10,7 @@ on:
 
 jobs:
   auto_approve:
-    if: github.repository == 'ahmdfauzanf/responsive-navbar'
+    if: github.repository == 'ahmadfauzanf/responsive-navbar'
     name: Auto Approve PR
     runs-on: ubuntu-latest
 
