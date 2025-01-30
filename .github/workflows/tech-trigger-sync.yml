@@ -13,7 +13,7 @@ jobs:
       
       - name: Checkout sawala-tech/tifa-next-api
         uses: actions/checkout@v3
-    
+
       - name: Check if fork is up-to-date
         id: check_update
         run: |
@@ -21,7 +21,7 @@ jobs:
           git fetch projects main
 
           # Compare latest commit hashes
-          if [[ $(git rev-list --left-right --count HEAD...projects/main | awk '{print $1}') -eq 0 ]]; then
+          if [[ $(git rev-list --left-right --count HEAD...fauzanf/main | awk '{print $1}') -eq 0 ]]; then
             echo "UP_TO_DATE=true" >> $GITHUB_ENV
           else
             echo "UP_TO_DATE=false" >> $GITHUB_ENV
