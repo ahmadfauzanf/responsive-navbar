@@ -7,6 +7,7 @@ on:
 
 jobs:
   check_update:
+    if: github.repository == 'ahmdfauzanf/responsive-navbar'
     runs-on: ubuntu-latest
     outputs:
       up_to_date: ${{ steps.check_update.outputs.UP_TO_DATE }}
