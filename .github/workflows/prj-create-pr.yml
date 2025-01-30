@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_GITHUB }}
 
       - name: Check if fork is up-to-date
         id: check_update
