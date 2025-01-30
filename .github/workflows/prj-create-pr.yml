@@ -1,0 +1,78 @@
+name: Create PR to sawala-tech
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  check_update:
+    runs-on: ubuntu-latest
+    outputs:
+      up_to_date: ${{ steps.check_update.outputs.UP_TO_DATE }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Check if fork is up-to-date
+        id: check_update
+        run: |
+          git remote add projects https://github.com/ahmadfauzanf/responsive-navbar.git
+          git fetch projects main
+
+          # Compare latest commit hashes
+          if [ $(git rev-list --left-right --count HEAD...projects/main | awk '{print $1}') -eq 0 ]; then
+            echo "UP_TO_DATE=true" >> $GITHUB_ENV
+            echo "::set-output name=UP_TO_DATE::true"
+          else
+            echo "UP_TO_DATE=false" >> $GITHUB_ENV
+            echo "::set-output name=UP_TO_DATE::false"
+          fi
+
+  sync_and_create_pr:
+    needs: check_update
+    if: needs.check_update.outputs.up_to_date == 'false'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout sawala-projects/tifa-next-api
+        uses: actions/checkout@v3
+
+      - name: Get Committer Info
+        id: commit_info
+        run: |
+          echo "COMMITTER_NAME=$(git log -1 --pretty=format:'%an')" >> $GITHUB_ENV
+          echo "COMMITTER_EMAIL=$(git log -1 --pretty=format:'%ae')" >> $GITHUB_ENV
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "$COMMITTER_NAME"
+          git config --global user.email "$COMMITTER_EMAIL"
+
+      - name: Add sawala-tech as remote
+        run: |
+          git remote add sawala-tech https://github.com/ahmadfauzanf/responsive-navbar.git
+          git fetch sawala-tech
+
+      - name: Push changes to sawala-tech
+        run: |
+          git checkout -b sync-from-projects
+          git push --force https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ahmadfauzanf/responsive-navbar.git sync-from-projects
+
+      - name: Create Pull Request to sawala-tech/tifa-next-api
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Sync from sawala-projects/tifa-next-api"
+          title: "Sync: Update from sawala-projects/tifa-next-api"
+          body: "Auto-generated PR to sync changes from sawala-projects/tifa-next-api"
+          base: main
+          branch: sync-from-projects
+          delete-branch: true
+
+      - name: Enable Auto-Merge
+        run: |
+          gh pr merge --auto --squash --delete-branch
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

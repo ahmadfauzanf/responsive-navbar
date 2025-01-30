@@ -1,0 +1,35 @@
+name: Trigger Fork Sync
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  trigger-sync:
+    if: github.repository == 'ahmadfauzanf/responsive-navbar'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check if fork is up-to-date
+        id: check_update
+        run: |
+          git remote add projects https://github.com/ahmdfauzanf/responsive-navbar.git
+          git fetch projects main
+
+          # Compare latest commit hashes
+          if git rev-list --left-right --count HEAD...projects/main | awk '{print $1}' -eq 0; then
+          echo "UP_TO_DATE=true" >> $GITHUB_ENV
+          else
+          echo "UP_TO_DATE=false" >> $GITHUB_ENV
+          fi
+
+      - name: Checkout sawala-tech/tifa-next-api
+        uses: actions/checkout@v3
+    
+      - name: Send Dispatch Event
+        if: env.UP_TO_DATE == 'false'
+        run: |
+          curl -X POST -H "Accept: application/vnd.github+json" \
+               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               https://api.github.com/repos/ahmdfauzanf/responsive-navbar/actions/workflows/prj-sync-fork.yml/dispatches \
+               -d '{"ref":"main"}'

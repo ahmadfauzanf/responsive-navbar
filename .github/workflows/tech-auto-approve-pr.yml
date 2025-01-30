@@ -1,0 +1,28 @@
+name: Auto Approve PR from sawala-projects
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+
+jobs:
+  auto_approve:
+    if: github.repository == 'ahmdfauzanf/responsive-navbar'
+    name: Auto Approve PR
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Approve Pull Request
+        uses: hmarr/auto-approve-action@v3
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto Merge Pull Request
+        uses: peter-evans/enable-pull-request-automerge@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ github.event.pull_request.number }}
+          merge-method: squash
