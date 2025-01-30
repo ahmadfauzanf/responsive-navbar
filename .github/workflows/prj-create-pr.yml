@@ -59,12 +59,12 @@ jobs:
       - name: Push changes to sawala-tech
         run: |
           git checkout -b sync-from-projects
-          git push --force https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ahmadfauzanf/responsive-navbar.git sync-from-projects
+          git push --force https://x-access-token:${{ secrets.PAT_GITHUB }}@github.com/ahmadfauzanf/responsive-navbar.git sync-from-projects
 
       - name: Create Pull Request to sawala-tech/tifa-next-api
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_GITHUB }}
           commit-message: "Sync from sawala-projects/tifa-next-api"
           title: "Sync: Update from sawala-projects/tifa-next-api"
           body: "Auto-generated PR to sync changes from sawala-projects/tifa-next-api"
@@ -76,4 +76,4 @@ jobs:
         run: |
           gh pr merge --auto --squash --delete-branch
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
