@@ -9,38 +9,11 @@ jobs:
   check_update:
     if: github.repository == 'ahmdfauzanf/responsive-navbar'
     runs-on: ubuntu-latest
-    outputs:
-      up_to_date: ${{ steps.check_update.outputs.UP_TO_DATE }}
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.PAT_GITHUB }}
-
-      - name: Check if fork is up-to-date
-        id: check_update
-        run: |
-          git remote add projects https://github.com/ahmadfauzanf/responsive-navbar.git
-          git fetch projects main
-
-          # Compare latest commit hashes
-          if [ $(git rev-list --left-right --count HEAD...projects/main | awk '{print $1}') -eq 0 ]; then
-            echo "UP_TO_DATE=true" >> $GITHUB_ENV
-            echo "::set-output name=UP_TO_DATE::true"
-          else
-            echo "UP_TO_DATE=false" >> $GITHUB_ENV
-            echo "::set-output name=UP_TO_DATE::false"
-          fi
-
-  sync_and_create_pr:
-    needs: check_update
-    if: needs.check_update.outputs.up_to_date == 'false'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout sawala-projects/tifa-next-api
-        uses: actions/checkout@v3
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Get Committer Info
         id: commit_info
@@ -61,21 +34,15 @@ jobs:
       - name: Push changes to sawala-tech
         run: |
           git checkout -b sync-from-projects
-          git push --force https://x-access-token:${{ secrets.PAT_GITHUB }}@github.com/ahmadfauzanf/responsive-navbar.git sync-from-projects
+          git push --force https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ahmadfauzanf/responsive-navbar.git sync-from-projects
 
       - name: Create Pull Request to sawala-tech/tifa-next-api
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.PAT_GITHUB }}
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Sync from sawala-projects/tifa-next-api"
           title: "Sync: Update from sawala-projects/tifa-next-api"
           body: "Auto-generated PR to sync changes from sawala-projects/tifa-next-api"
           base: main
           branch: sync-from-projects
           delete-branch: true
-
-      - name: Enable Auto-Merge
-        run: |
-          gh pr merge --auto --squash --delete-branch
-        env:
-          GH_TOKEN: ${{ secrets.PAT_GITHUB }}
