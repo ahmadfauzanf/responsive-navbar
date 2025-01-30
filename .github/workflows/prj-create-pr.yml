@@ -10,10 +10,10 @@ jobs:
     if: github.repository == 'ahmdfauzanf/responsive-navbar'
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repository with PAT
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_GITHUB }}
 
       - name: Get Committer Info
         id: commit_info
@@ -26,23 +26,23 @@ jobs:
           git config --global user.name "$COMMITTER_NAME"
           git config --global user.email "$COMMITTER_EMAIL"
 
-      - name: Add sawala-tech as remote
+      - name: Debug Token Access
         run: |
-          git remote add sawala-tech https://github.com/ahmadfauzanf/responsive-navbar.git
-          git fetch sawala-tech
+          echo "Checking repository access..."
+          curl -H "Authorization: token ${{ secrets.PAT_GITHUB }}" https://api.github.com/repos/ahmadfauzanf/responsive-navbar
 
       - name: Push changes to sawala-tech
         run: |
           git checkout -b sync-from-projects
-          git push --force https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/ahmadfauzanf/responsive-navbar.git sync-from-projects
+          git push --force https://x-access-token:${{ secrets.PAT_GITHUB }}@github.com/ahmadfauzanf/responsive-navbar.git sync-from-projects
 
       - name: Create Pull Request to sawala-tech/tifa-next-api
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_GITHUB }}
           commit-message: "Sync from sawala-projects/tifa-next-api"
           title: "Sync: Update from sawala-projects/tifa-next-api"
           body: "Auto-generated PR to sync changes from sawala-projects/tifa-next-api"
           base: main
           branch: sync-from-projects
-          delete-branch: true
+          delete-branch: true    
