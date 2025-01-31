@@ -1,4 +1,4 @@
-name: Create PR to sawala-tech
+name: Sync Fork to Upstream and Create PR
 
 on:
   push:
@@ -6,43 +6,39 @@ on:
       - main
 
 jobs:
-  check_update:
-    if: github.repository == 'ahmdfauzanf/responsive-navbar'
+  sync_and_create_pr:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repository with PAT
+      - name: Checkout fork repository
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.PAT_GITHUB }}
 
-      - name: Get Committer Info
-        id: commit_info
+      - name: Add upstream repository
         run: |
-          echo "COMMITTER_NAME=$(git log -1 --pretty=format:'%an')" >> $GITHUB_ENV
-          echo "COMMITTER_EMAIL=$(git log -1 --pretty=format:'%ae')" >> $GITHUB_ENV
+          git remote add upstream https://github.com/ahmadfauzanf/responsive-navbar.git
+          git fetch upstream main
 
-      - name: Setup Git
+      - name: Create sync branch
         run: |
-          git config --global user.name "$COMMITTER_NAME"
-          git config --global user.email "$COMMITTER_EMAIL"
+          git checkout -b sync-to-upstream
+          git push --force https://x-access-token:${{ secrets.PAT_GITHUB }}@github.com/ahmdfauzanf/responsive-navbar.git sync-to-upstream
 
-      - name: Debug Token Access
+      - name: Install GitHub CLI
         run: |
-          echo "Checking repository access..."
-          curl -H "Authorization: token ${{ secrets.PAT_GITHUB }}" https://api.github.com/repos/ahmadfauzanf/responsive-navbar
+          sudo apt update
+          sudo apt install gh -y
 
-      - name: Push changes to sawala-tech
+      - name: Authenticate GitHub CLI
         run: |
-          git checkout -b sync-from-projects
-          git push --force https://x-access-token:${{ secrets.PAT_GITHUB }}@github.com/ahmadfauzanf/responsive-navbar.git sync-from-projects
+          echo "${{ secrets.PAT_GITHUB }}" | gh auth login --with-token
 
-      - name: Create Pull Request to sawala-tech/tifa-next-api
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.PAT_GITHUB }}
-          commit-message: "Sync from sawala-projects/tifa-next-api"
-          title: "Sync: Update from sawala-projects/tifa-next-api"
-          body: "Auto-generated PR to sync changes from sawala-projects/tifa-next-api"
-          base: main
-          branch: sync-from-projects
-          delete-branch: true    
+      - name: Create Pull Request to upstream
+        run: |
+          gh pr create \
+            --base main \
+            --head ahmdfauzanf:sync-to-upstream \
+            --title "Sync: Update from fork" \
+            --body "Auto-generated PR to sync changes from fork to upstream" \
+            --repo ahmadfauzanf/responsive-navbar
