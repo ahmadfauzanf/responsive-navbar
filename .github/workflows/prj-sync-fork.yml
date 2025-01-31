@@ -12,7 +12,7 @@ jobs:
       - name: Checkout Fork Repository
         uses: actions/checkout@v3                                     
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_GITHUB }}
           fetch-depth: 0
 
       - name: Add Upstream Remote
