@@ -8,6 +8,7 @@ on:
 
 jobs:
   Lint:
+    if: github.repository == 'ahmdfauzanf/responsive-navbar'
     uses: ./.github/workflows/lint.yml
 
   Deploy-Production:

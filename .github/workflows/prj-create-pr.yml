@@ -1,4 +1,4 @@
-name: Sync Fork to Upstream and Create PR
+name: Sync Fork Upstream and Create PR
 
 on:
   push:
