@@ -6,9 +6,37 @@ on:
       - main
 
 jobs:
-  sync_and_create_pr:
+  commit_check:
     runs-on: ubuntu-latest
+    outputs:
+      skip_pr: ${{ steps.check_diff.outputs.skip_pr }}
+    steps:
+      - name: Checkout fork repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.PAT_GITHUB }}
 
+      - name: Add upstream repository
+        run: |
+          git remote add upstream https://github.com/ahmadfauzanf/responsive-navbar.git
+          git fetch upstream main
+
+      - name: Check if fork is up to date
+        id: check_diff
+        run: |
+          UPSTREAM_COMMITS=$(git rev-list --count HEAD..upstream/main)
+          if [ "$UPSTREAM_COMMITS" -eq 0 ]; then
+            echo "Fork is already up to date. No PR needed."
+            echo "skip_pr=true" >> $GITHUB_OUTPUT
+          else
+            echo "Fork is behind upstream. Proceeding with PR."
+            echo "skip_pr=false" >> $GITHUB_OUTPUT
+          fi
+
+  sync_and_create_pr:
+    needs: commit_check
+    if: needs.commit_check.outputs.skip_pr == 'false'
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout fork repository
         uses: actions/checkout@v3
@@ -22,7 +50,8 @@ jobs:
 
       - name: Create sync branch
         run: |
-          git checkout -b sync-to-upstream
+          git checkout -b sync-to-upstream || git checkout sync-to-upstream
+          git merge --no-edit upstream/main
           git push --force https://x-access-token:${{ secrets.PAT_GITHUB }}@github.com/ahmdfauzanf/responsive-navbar.git sync-to-upstream
 
       - name: Install GitHub CLI
